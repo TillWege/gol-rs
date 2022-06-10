@@ -1,4 +1,3 @@
-use eframe::epaint::Color32;
 use rand::Rng;
 
 use self::Direction::*;
@@ -38,8 +37,8 @@ impl Direction {
 
 #[derive(Debug)]
 pub struct Game {
-    height: isize,
-    width: isize,
+    pub height: isize,
+    pub width: isize,
     state: Vec<bool>,
 }
 
@@ -118,16 +117,4 @@ impl Game {
             }
         }
     }
-
-    // pub fn show(&mut self, pixels: &mut Vec<Color32>){
-    //     for i in 0..self.state.len() {
-    //         let val = &self.state[i];
-    //         if *val {
-    //             pixels[i] = Color32::BLACK;
-    //         }else{
-    //             pixels[i] = Color32::WHITE;
-    //         }
-    //     }
-
-    // }
 }

@@ -20,6 +20,7 @@ fn main() {
 struct RustOfLife {
     width: usize,
     height: usize,
+    zoom: usize,
     game: Option<Game>,
     texture: Option<egui::TextureHandle>,
     frames: usize,
@@ -31,6 +32,7 @@ impl Default for RustOfLife {
         Self {
             width: 100,
             height: 100,
+            zoom: 1,
             game: None,
             texture: None,
             frames: 0,
@@ -46,12 +48,17 @@ impl eframe::App for RustOfLife {
             ui.separator();
             ui.horizontal(|ui| {
                 ui.label("Height:");
-                ui.add(widgets::DragValue::new(&mut self.height));
+                ui.add(widgets::DragValue::new(&mut self.height).clamp_range(10..=1000));
             });
             ui.separator();
             ui.horizontal(|ui| {
                 ui.label("Width:");
-                ui.add(widgets::DragValue::new(&mut self.width));
+                ui.add(widgets::DragValue::new(&mut self.width).clamp_range(10..=1000));
+            });
+            ui.separator();
+            ui.horizontal(|ui| {
+                ui.label("Zoom:");
+                ui.add(widgets::DragValue::new(&mut self.zoom).clamp_range(1..=10));
             });
             ui.separator();
             if ui.button("Start Game").clicked() {
@@ -87,19 +94,24 @@ impl RustOfLife {
 
     fn update_texture(&mut self, ctx: &egui::Context){
         if self.game.is_none() { return };
-        
-        let mut clr_img: ColorImage = ColorImage::new([self.width, self.height], Color32::BLACK);
-        //let pixels = &clr_img.pixels;
-        //self.game.as_mut().unwrap().show(&mut pixels);
+        let game_ref = self.game.as_mut().unwrap();
+        let mut img_width: usize = game_ref.width.try_into().unwrap();
+        img_width = img_width * self.zoom;
+
+        let mut img_height: usize = game_ref.height.try_into().unwrap();
+        img_height = img_height * self.zoom;
+
+
+        let mut clr_img: ColorImage = ColorImage::new([img_width, img_height], Color32::BLACK);
+
         for i in 0..clr_img.pixels.len() {
-            let val = self.game.as_mut().unwrap().get_value_by_index(i);
+            let val = game_ref.get_value_by_index(i / (self.zoom * 2));
             if val.unwrap_or_else(||false) {
                 clr_img.pixels[i] = Color32::BLACK;
             }else{
                 clr_img.pixels[i] = Color32::WHITE;
             }
         }
-
         let img_data = ImageData::Color(clr_img);
 
         self.texture = Some(ctx.load_texture("game_img", img_data));
