@@ -1,12 +1,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 mod game;
+mod settings;
 
 use eframe::{
-    egui::{self, widgets, },
+    egui::{self, },
     epaint::{Color32, ColorImage, ImageData},
 };
 use game::Game;
+use settings::Settings;
 
 fn main() {
     let mut options = eframe::NativeOptions::default();
@@ -18,52 +20,29 @@ fn main() {
 }
 
 struct RustOfLife {
-    width: usize,
-    height: usize,
-    zoom: usize,
     game: Option<Game>,
     texture: Option<egui::TextureHandle>,
     frames: usize,
     starttime: std::time::SystemTime,
+    settings: Settings,
 }
 
 impl Default for RustOfLife {
     fn default() -> Self {
         Self {
-            width: 100,
-            height: 100,
-            zoom: 1,
             game: None,
             texture: None,
             frames: 0,
             starttime: std::time::SystemTime::now(),
+            settings: Settings::default(),
         }
     }
 }
 
 impl eframe::App for RustOfLife {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::SidePanel::left("left side panel").show(ctx, |ui| {
-            ui.heading("Rust of Life");
-            ui.separator();
-            ui.horizontal(|ui| {
-                ui.label("Height:");
-                ui.add(widgets::DragValue::new(&mut self.height).clamp_range(10..=1000));
-            });
-            ui.separator();
-            ui.horizontal(|ui| {
-                ui.label("Width:");
-                ui.add(widgets::DragValue::new(&mut self.width).clamp_range(10..=1000));
-            });
-            ui.separator();
-            ui.horizontal(|ui| {
-                ui.label("Zoom:");
-                ui.add(widgets::DragValue::new(&mut self.zoom).clamp_range(1..=10));
-            });
-            ui.separator();
-            if ui.button("Start Game").clicked() {
-                self.init_game();
-            }
+        self.settings.show(ctx, |settings|{
+            self.game = Some(Game::new(settings.width, settings.height));
         });
 
         egui::CentralPanel::default().show(ctx, |ui| match &self.texture {
@@ -84,28 +63,21 @@ impl eframe::App for RustOfLife {
 }
 
 impl RustOfLife {
-    fn init_game(&mut self) {
-        let i_width  = isize::try_from(self.width).ok().unwrap_or_else(||0);
-        let i_height = isize::try_from(self.height).ok().unwrap_or_else(||0);
-        
-        self.game = Some(Game::new(i_width, i_height));
-    }
-
 
     fn update_texture(&mut self, ctx: &egui::Context){
         if self.game.is_none() { return };
+
         let game_ref = self.game.as_mut().unwrap();
-        let mut img_width: usize = game_ref.width.try_into().unwrap();
-        img_width = img_width * self.zoom;
-
-        let mut img_height: usize = game_ref.height.try_into().unwrap();
-        img_height = img_height * self.zoom;
-
+        
+        let img_width: usize   = (game_ref.width * self.settings.zoom).try_into().unwrap();
+        let img_height: usize  = (game_ref.height * self.settings.zoom).try_into().unwrap();
+        let zoom_offset: usize = (self.settings.zoom.pow(2)).try_into().unwrap();
 
         let mut clr_img: ColorImage = ColorImage::new([img_width, img_height], Color32::BLACK);
-
+        
+        
         for i in 0..clr_img.pixels.len() {
-            let val = game_ref.get_value_by_index(i / (self.zoom * 2));
+            let val = game_ref.get_value_by_index(i / zoom_offset);
             if val.unwrap_or_else(||false) {
                 clr_img.pixels[i] = Color32::BLACK;
             }else{
