@@ -46,13 +46,17 @@ impl Game {
     
     pub fn new(width: isize, height: isize) -> Self {
         let mut state = Vec::with_capacity((width * height) as usize);
-
+        
         let mut rng = rand::thread_rng();
-        for _i in 0..(width * height) {
-            state.push(rng.gen());
+        for i  in (0..(width * height) as usize) {
+            state.push( rng.gen());
         }
         
-        Game{height, width, state}
+        Game {
+            height, 
+            width, 
+            state
+        }
     }
 
 

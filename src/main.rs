@@ -3,8 +3,10 @@
 mod game;
 mod views;
 
+use std::ops::Div;
+
 use eframe::{
-    egui::{self},
+    egui::{self, widgets, plot::CoordinatesFormatter},
     epaint::{Color32, ColorImage, ImageData},
 };
 
@@ -68,17 +70,29 @@ impl RustOfLife {
 
         let img_width: usize = (game_ref.width * self.settings.zoom).try_into().unwrap();
         let img_height: usize = (game_ref.height * self.settings.zoom).try_into().unwrap();
-        let zoom_offset: usize = (self.settings.zoom.pow(2)).try_into().unwrap();
+        let zoom_level: usize = self.settings.zoom.try_into().unwrap();
 
         let mut clr_img: ColorImage = ColorImage::new([img_width, img_height], Color32::BLACK);
 
-        for i in 0..clr_img.pixels.len() {
-            let val = game_ref.get_value_by_index(i / zoom_offset);
-            if val.unwrap_or_else(|| false) {
-                clr_img.pixels[i] = Color32::BLACK;
+         for i in 0..clr_img.pixels.len() {
+            if game_ref.get_value_by_index(i / zoom_level).unwrap_or_else(|| false) {
+               clr_img.pixels[i] = Color32::BLACK;
             } else {
-                clr_img.pixels[i] = Color32::WHITE;
+               clr_img.pixels[i] = Color32::WHITE;
             }
+ 
+            // let y_index = (i / img_width) / zoom_level;
+            // let x_index = (i % img_width) / zoom_level;
+
+            // if (x_index == y_index) {
+            //     clr_img.pixels[i] = Color32::BLACK;
+            // } else {
+            //     clr_img.pixels[i] = Color32::WHITE;
+            // }
+
+            // if (x_index == 0) || (x_index == (img_width / zoom_level) - 1) ||(y_index == 0)||(y_index == (img_height / zoom_level) - 1) {
+            //     clr_img.pixels[i] = Color32::RED;
+            // } 
         }
         let img_data = ImageData::Color(clr_img);
 
