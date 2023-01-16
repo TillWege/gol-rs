@@ -14,7 +14,7 @@ fn main() {
     let mut options = eframe::NativeOptions::default();
     options.vsync = true;
     let app = RustOfLife::default();
-    eframe::run_native("Rust of Life", options, Box::new(|_cc| Box::new(app)));
+    eframe::run_native("gol-rs", options, Box::new(|_cc| Box::new(app)));
 }
 
 struct RustOfLife {
